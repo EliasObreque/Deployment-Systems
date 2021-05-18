@@ -19,6 +19,16 @@ float current_temp[8];
 #define BURN_FACE 34
 #define SET_BURN 35
 
+#define pin_sw_x_plus 8 
+#define pin_sw_x_minus 4 
+#define pin_sw_y_plus 7 
+#define pin_sw_y_minus 2 
+
+#define pin_burn_x_plus 3
+#define pin_burn_x_minus 6
+#define pin_burn_y_plus 5
+#define pin_burn_y_minus 9
+
 
 // Create the MCP9808 temperature sensor object
 Adafruit_MCP9808 t1 = Adafruit_MCP9808();
@@ -36,15 +46,25 @@ void wake_sensors();
 void check_i2c_sensor();
 void shutdown_wake_sensor();
 void get_resolution();
+void read_sw_state();
 
 
 void setup() {
-  Wire.begin(0x40);               
-  Wire.onReceive(readMasterWrite);
-  Wire.onRequest(responseToMasterRead);
+  //Wire.begin(0x40);               
+  //Wire.onReceive(readMasterWrite);
+  //Wire.onRequest(responseToMasterRead);
+  pinMode(pin_sw_x_plus, INPUT);
+  pinMode(pin_sw_y_minus, INPUT);
+  pinMode(pin_sw_y_plus, INPUT);
+  pinMode(pin_sw_y_minus, INPUT);
+
+  pinMode(pin_burn_x_plus, OUTPUT);
+  pinMode(pin_burn_x_minus, OUTPUT);
+  pinMode(pin_burn_y_plus, OUTPUT);
+  pinMode(pin_burn_y_minus, OUTPUT);
   
-  // Serial.begin(9600);
-  while (!Serial); //waits for serial terminal to be open, necessary in newer arduino boards.
+  Serial.begin(9600);
+  // while (!Serial); //waits for serial terminal to be open, necessary in newer arduino boards.
   // Make sure the sensor is found, you can also pass in a different i2c
   // address with tempsensor.begin(0x19) for example, also can be left in blank for default address use
   // Also there is a table with all addres possible for this sensor, you can connect multiple sensors
@@ -60,10 +80,10 @@ void setup() {
   //  1  1  1   0x1F
 
   //init_i2c_sensor();
-  check_i2c_sensor();
+  //check_i2c_sensor();
  // sets the resolution mode of reading, the modes are defined in the table bellow:
   
-  t1.setResolution(3);
+  /*t1.setResolution(3);
   t2.setResolution(3);
   t3.setResolution(3);
   t4.setResolution(3);
@@ -71,7 +91,7 @@ void setup() {
   t6.setResolution(3);
   t7.setResolution(3);
   t8.setResolution(3);
-  
+  */
   // Mode Resolution SampleTime
   //  0    0.5°C       30 ms
   //  1    0.25°C      65 ms
@@ -86,14 +106,23 @@ void loop() {
   //print_data_sensors();
   //delay(2000);
   //shutdown_wake_sensor();
-  delay(200);
+  int face = 1;
+  read_sw_state(face);
+  face = 2;
+  read_sw_state(face);
+  face = 3;
+  read_sw_state(face);
+  face = 4;
+  read_sw_state(face);
+  
+  delay(1000);
 }
 
 void readMasterWrite(int howMany){
   int cmd_num = Wire.read();
   int cmd_value = Wire.read();    // receive byte as an integer
 
-  if (cmd_num == INIT_SENSORS_TEMP){
+  if (cmd_num == START_SENSORS_TEMP){
     wake_sensors();
   }
   else if (cmd_num == STOP_SENSORS_TEMP){
@@ -103,13 +132,37 @@ void readMasterWrite(int howMany){
 
   }
   else if (cmd_num == SET_BURN){
-    
+
   }
   }
 
 void responseToMasterRead(){
   
   }
+
+void read_sw_state(int face){
+  int state;
+  if (face == 1){
+  state = digitalRead(pin_sw_x_plus);
+  Serial.print(1);
+  Serial.println(state);
+  }
+  else if (face == 2){
+  state = digitalRead(pin_sw_y_plus);
+  Serial.print(2);
+  Serial.println(state);
+  }
+  else if (face == 3){
+  state = digitalRead(pin_sw_x_minus);
+  Serial.print(3);
+  Serial.println(state);
+  }
+  else if (face == 4){
+  state = digitalRead(pin_sw_y_minus);
+  Serial.print(4);
+  Serial.println(state);
+  }
+}
 
 void print_data_sensors(){
   for (int i=0; i < 7; i++){
