@@ -10,7 +10,6 @@ products from Adafruit!
 
 #include <Wire.h>
 #include "Adafruit_MCP9808.h"
-float current_temp[8];
 
 #define START_SENSORS_TEMP 30
 #define STOP_SENSORS_TEMP 31
@@ -29,6 +28,13 @@ float current_temp[8];
 #define pin_burn_y_plus 5
 #define pin_burn_y_minus 9
 
+float current_temp[8];
+
+unsigned long current_time;
+int period_time = 2000; // milisecond
+int attempt_burn = 5;
+byte outputValue = 10;
+byte increment_per_attempt = 20; 
 
 // Create the MCP9808 temperature sensor object
 Adafruit_MCP9808 t1 = Adafruit_MCP9808();
@@ -107,15 +113,9 @@ void loop() {
   //delay(2000);
   //shutdown_wake_sensor();
   int face = 1;
-  read_sw_state(face);
-  face = 2;
-  read_sw_state(face);
-  face = 3;
-  read_sw_state(face);
-  face = 4;
-  read_sw_state(face);
-  
-  delay(1000);
+  activate_resistor(face);
+  Serial.println("waiting...");
+  delay(5000);
 }
 
 void readMasterWrite(int howMany){
@@ -164,6 +164,34 @@ void read_sw_state(int face){
   }
 }
 
+void activate_resistor(int face){
+  int selected_pin;
+  if (face == 1){
+    selected_pin = pin_burn_x_plus;
+  }
+  else if (face == 2){
+    selected_pin = pin_burn_x_minus;
+  }
+  else if (face == 3){
+    selected_pin = pin_burn_y_plus;
+  }
+  else if (face == 4){
+    selected_pin = pin_burn_y_minus;
+  }  
+
+  for (int i=0; i < attempt_burn; i++){
+    current_time = millis();
+    Serial.print("Attempt"); Serial.print("\t");
+    Serial.println(i);
+    while (millis() < current_time + period_time){
+      analogWrite(selected_pin, outputValue);
+    }
+    analogWrite(selected_pin, 0);
+    delay(int (period_time / 2));
+    outputValue += increment_per_attempt;
+  }
+}
+
 void print_data_sensors(){
   for (int i=0; i < 7; i++){
     Serial.print(current_temp[i], 4); Serial.print("\t");
@@ -183,6 +211,7 @@ void read_sensors(){
   }
 
 void wake_sensors(){
+  check_i2c_sensor();
   t1.wake();
   t2.wake();
   t3.wake();
@@ -191,8 +220,6 @@ void wake_sensors(){
   t6.wake();
   t7.wake();
   t8.wake();
-
-  check_i2c_sensor();
   }
 
 void shutdown_wake_sensor(){
