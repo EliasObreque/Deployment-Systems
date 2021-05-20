@@ -28,12 +28,19 @@ products from Adafruit!
 #define pin_burn_y_plus 5
 #define pin_burn_y_minus 9
 
-float current_temp[8];
+const byte I2C_SLAVE_ADDR = 0x40;
+
+int cmd_num;
+int cmd_value;
+
+const int num_temp_sensor = 8;
+float current_temp[num_temp_sensor];
+int state_sw = 0;
 
 unsigned long current_time;
-int period_time = 2000; // milisecond
+int period_time = 3000; // milisecond
 int attempt_burn = 5;
-byte outputValue = 10;
+byte outputValue = 50;
 byte increment_per_attempt = 20; 
 
 // Create the MCP9808 temperature sensor object
@@ -56,9 +63,9 @@ void read_sw_state();
 
 
 void setup() {
-  //Wire.begin(0x40);               
-  //Wire.onReceive(readMasterWrite);
-  //Wire.onRequest(responseToMasterRead);
+  Wire.begin(I2C_SLAVE_ADDR);               
+  Wire.onReceive(readMasterWrite);
+  Wire.onRequest(responseToMasterRead);
   pinMode(pin_sw_x_plus, INPUT);
   pinMode(pin_sw_y_minus, INPUT);
   pinMode(pin_sw_y_plus, INPUT);
@@ -70,7 +77,7 @@ void setup() {
   pinMode(pin_burn_y_minus, OUTPUT);
   
   Serial.begin(9600);
-  // while (!Serial); //waits for serial terminal to be open, necessary in newer arduino boards.
+  while (!Serial); //waits for serial terminal to be open, necessary in newer arduino boards.
   // Make sure the sensor is found, you can also pass in a different i2c
   // address with tempsensor.begin(0x19) for example, also can be left in blank for default address use
   // Also there is a table with all addres possible for this sensor, you can connect multiple sensors
@@ -112,16 +119,18 @@ void loop() {
   //print_data_sensors();
   //delay(2000);
   //shutdown_wake_sensor();
-  int face = 1;
-  activate_resistor(face);
-  Serial.println("waiting...");
-  delay(5000);
+  //int face = 1;
+  //activate_resistor(face);
+  //Serial.println("waiting...");
+  //delay(100);
+  Serial.print(cmd_num); Serial.print("\t"); Serial.println(cmd_value);
 }
 
 void readMasterWrite(int howMany){
-  int cmd_num = Wire.read();
-  int cmd_value = Wire.read();    // receive byte as an integer
+  cmd_num = Wire.read();
+  cmd_value = Wire.read();    // receive byte as an integer
 
+  
   if (cmd_num == START_SENSORS_TEMP){
     wake_sensors();
   }
@@ -129,38 +138,49 @@ void readMasterWrite(int howMany){
     shutdown_wake_sensor();
   }
   else if (cmd_num == BURN_FACE){
-
+    activate_resistor(cmd_value);
   }
-  else if (cmd_num == SET_BURN){
-
+  else if (cmd_num == GET_TEMP){
+    read_sensors();
+  }
+  else if (cmd_num == READ_SW_FACE){
+    read_sw_state(cmd_value);
   }
   }
 
 void responseToMasterRead(){
-  
+  if (cmd_num == GET_TEMP){
+    //for (int i=0; i < 7; i++){
+    //  Wire.write(current_temp[i]); Wire.write("\t");
+    //}
+    Wire.write((uint8_t*) current_temp, sizeof(current_temp)); 
+  }
+  else if (cmd_num == READ_SW_FACE){
+    Wire.write(cmd_value);
+    Wire.write(state_sw);
+  }
   }
 
 void read_sw_state(int face){
-  int state;
   if (face == 1){
-  state = digitalRead(pin_sw_x_plus);
-  Serial.print(1);
-  Serial.println(state);
+  state_sw = digitalRead(pin_sw_x_plus);
+  //Serial.print(1);
+  //Serial.println(state);
   }
   else if (face == 2){
-  state = digitalRead(pin_sw_y_plus);
-  Serial.print(2);
-  Serial.println(state);
+  state_sw = digitalRead(pin_sw_y_plus);
+  //Serial.print(2);
+  //Serial.println(state);
   }
   else if (face == 3){
-  state = digitalRead(pin_sw_x_minus);
-  Serial.print(3);
-  Serial.println(state);
+  state_sw = digitalRead(pin_sw_x_minus);
+  //Serial.print(3);
+  //Serial.println(state);
   }
   else if (face == 4){
-  state = digitalRead(pin_sw_y_minus);
-  Serial.print(4);
-  Serial.println(state);
+  state_sw = digitalRead(pin_sw_y_minus);
+  //Serial.print(4);
+  //Serial.println(state);
   }
 }
 
@@ -169,10 +189,10 @@ void activate_resistor(int face){
   if (face == 1){
     selected_pin = pin_burn_x_plus;
   }
-  else if (face == 2){
+  else if (face == 3){
     selected_pin = pin_burn_x_minus;
   }
-  else if (face == 3){
+  else if (face == 2){
     selected_pin = pin_burn_y_plus;
   }
   else if (face == 4){
@@ -184,11 +204,10 @@ void activate_resistor(int face){
     Serial.print("Attempt"); Serial.print("\t");
     Serial.println(i);
     while (millis() < current_time + period_time){
-      analogWrite(selected_pin, outputValue);
+      digitalWrite(selected_pin, HIGH);
     }
-    analogWrite(selected_pin, 0);
+    digitalWrite(selected_pin, LOW);
     delay(int (period_time / 2));
-    outputValue += increment_per_attempt;
   }
 }
 
@@ -238,6 +257,7 @@ void get_resolution(){
   }
 
 void init_i2c_sensor(){
+  check_i2c_sensor();
   }
 
 void check_i2c_sensor(){

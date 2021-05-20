@@ -1,11 +1,13 @@
 #include <Wire.h>
 
-#define INIT_SENSORS_TEMP 30
-#define GET_TEMP 31
-#define READ_SW_FACE 32
-#define BURN_FACE 33
-#define SET_BURN 34
+#define START_SENSORS_TEMP 30
+#define STOP_SENSORS_TEMP 31
+#define GET_TEMP 32
+#define READ_SW_FACE 33
+#define BURN_FACE 34
+#define SET_BURN 35
 
+const byte I2C_SLAVE_ADDR = 0x40;
 String cmd_name;
 String cmd_value;
 bool cmd_change = 0;
@@ -56,11 +58,12 @@ void sendCom(String data, String value){
 	int selected_value = 0; // {1: x+, 2: x-, 3: y+, 4 y-}
 
 	if (data == "is2_init_sensor"){
-		Serial.println(INIT_SENSORS_TEMP);
-		selected_cmd = INIT_SENSORS_TEMP;}
+		Serial.println(START_SENSORS_TEMP);
+		selected_cmd = START_SENSORS_TEMP;}
 	else if (data == "is2_get_state_panel") {
 		selected_cmd = READ_SW_FACE;
-		selected_value = int(value[0]);
+		selected_value = int(value[0]) - 48;
+   Serial.print(selected_cmd); Serial.print("\t"); Serial.println(selected_value);
 	}
 	else if (data == "is2_deploy_panel"){
 		selected_cmd = BURN_FACE;
@@ -73,9 +76,28 @@ void sendCom(String data, String value){
 	selected_cmd = GET_TEMP;
 	}
 	
-	Wire.beginTransmission(0x40); // transmit to device #40
+	  Wire.beginTransmission(I2C_SLAVE_ADDR); // transmit to device #40
   	Wire.write(selected_cmd);        // sends five bytes
   	Wire.write(selected_value);              // sends one byte  
   	Wire.endTransmission();    // stop transmitting
-  	delay(500);
+
+  if (selected_cmd == READ_SW_FACE){
+    Wire.requestFrom(I2C_SLAVE_ADDR, 2);
+    int face = Wire.read();
+    int state = Wire.read();
+    Serial.print(face); Serial.print("\t"); Serial.println(state);
+    } 
+   else if (selected_cmd == GET_TEMP){
+    const int VEC_MAX = 8;
+    float vec[VEC_MAX];
+    uint8_t* vp = (uint8_t*) vec;
+    Wire.requestFrom(I2C_SLAVE_ADDR, 8);
+    while (Wire.available()) {
+      *vp++ = Wire.read();
+    }
+    for (int i = 0; i < VEC_MAX; i++) {
+      Serial.println(vec[i]);
+    }
+   }
+  delay(500);
 }
