@@ -7,6 +7,7 @@
 #define BURN_FACE 34
 #define SET_BURN 35
 #define SENSORS_TEMP_STATUS 36
+#define SAMPLE_TEMP 37
 
 
 const byte I2C_SLAVE_ADDR = 0x40;
@@ -38,13 +39,13 @@ void loop() {
 	  	}
    		}
 	}
-}
-  if (cmd_name.length() > 0) {
-    Serial.print(cmd_name); Serial.print("\t"); Serial.println(cmd_value);
-    sendCom(cmd_name, cmd_value);
-    reset_i2c_cmd();
 	}
-    delay(500);
+  	if (cmd_name.length() > 0) {
+	    Serial.print(cmd_name); Serial.print("\t"); Serial.println(cmd_value);
+	    sendCom(cmd_name, cmd_value);
+	    reset_i2c_cmd();
+	}
+    delay(100);
 }
 
 void reset_i2c_cmd(){
@@ -77,11 +78,13 @@ void sendCom(String data, String value){
 	}
 	else if (data == "is2_deploy_panel"){
 		selected_cmd = BURN_FACE;
-		selected_value = int(value[0]);
+		selected_value = int(value[0]) - 48;
+		Serial.println(selected_value);
 	}
 	else if (data == "is2_set_deploy"){
 		selected_cmd = SET_BURN;
-    	selected_value = 0;
+    	selected_value = int(value[0]) - 48;
+    	Serial.println(selected_value);
 	}
 	else if (data == "is2_get_temp"){
   		Serial.println("cmd get temp");
@@ -93,6 +96,11 @@ void sendCom(String data, String value){
 		selected_cmd = SENSORS_TEMP_STATUS;
   		selected_value = 0;
 	}
+	else if (data == "is2_sample_temp"){
+		Serial.println("Sample temp");
+		selected_cmd = SAMPLE_TEMP;
+		selected_value = 0;
+	}
 	
 	Wire.beginTransmission(I2C_SLAVE_ADDR); // transmit to device #40
   	Wire.write((int) selected_cmd);        // sends five bytes
@@ -103,18 +111,25 @@ void sendCom(String data, String value){
 }
 
 void request_to_slave(int selected_cmd){
-	if (selected_cmd == READ_SW_FACE){
+  	if (selected_cmd == START_SENSORS_TEMP){
+  		Wire.requestFrom(I2C_SLAVE_ADDR, 2);
+		int state = Wire.read();
+		Serial.println("start temp");
+		Serial.println(state);
+   	} 
+   	else if (selected_cmd == STOP_SENSORS_TEMP){
+   		Wire.requestFrom(I2C_SLAVE_ADDR, 2);
+		int state = Wire.read();
+		Serial.println("stop temp");
+		Serial.println(state);
+   	}
+	else if (selected_cmd == READ_SW_FACE){
 		Wire.requestFrom(I2C_SLAVE_ADDR, 2);
 	    int face = Wire.read();
 	    int state = Wire.read();
 	    Serial.println("read sw");
 	    Serial.print((int) face); Serial.print("\t"); Serial.println(state);
   	}
-  	else if (selected_cmd == START_SENSORS_TEMP){
-		int state = Wire.read();
-		Serial.println("start temp");
-	Serial.println(state);
-   	} 
    	else if (selected_cmd == GET_TEMP){
 	    const int VEC_MAX = 2;
 	    float vec[VEC_MAX];
@@ -131,17 +146,19 @@ void request_to_slave(int selected_cmd){
 			vec[i] = *((float*)(buff));
     		Serial.println(vec[i]);
     	}
-    	
-    	//for (int i = 0; i < VEC_MAX; i++) {
-  		//	Serial.println(vec_char[i]);
-    	//}
 	}
     else if (selected_cmd == SENSORS_TEMP_STATUS){
-    	Wire.requestFrom(I2C_SLAVE_ADDR, 1);
-    	int status = Wire.read();
+    	Wire.requestFrom(I2C_SLAVE_ADDR, 2);
+    	int status1 = Wire.read();
     	Serial.println("status of sensors");
-    	Serial.println(status);
+    	Serial.print(status1);
     }
+    else if (selected_cmd == SAMPLE_TEMP){
+    	Wire.requestFrom(I2C_SLAVE_ADDR, 2);
+		int state = Wire.read();
+		Serial.println("sample temp");
+		Serial.println(state);
+    } 
 }
 
 float getFloat(byte packet[], int i)

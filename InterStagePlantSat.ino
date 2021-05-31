@@ -18,6 +18,7 @@ products from Adafruit!
 #define BURN_FACE 34
 #define SET_BURN 35
 #define SENSORS_TEMP_STATUS 36
+#define SAMPLE_TEMP 37
 
 #define pin_sw_x_plus 8 
 #define pin_sw_x_minus 4 
@@ -34,16 +35,23 @@ const byte I2C_SLAVE_ADDR = 0x40;
 int cmd_num = 10;
 int cmd_value = 5;
 
+// temp
 const int num_temp_sensor = 2;
 float current_temp[num_temp_sensor];
 int state_sw = 0;
-int flag_i2c_error_temp = 0;
 
-unsigned long current_time;
-int period_time = 3000; // milisecond
+// flags 
+int flag_i2c_error_temp = 0;
+int flag_i2c_start_temp = 0;
+int flag_i2c_stop_temp = 0;
+int flag_i2c_sample_temp = 0;
+int flag_burn_face = 0;
+
+// burn
+int face_to_burn;
+int current_time;
+int period_time = 700; // milisecond
 int attempt_burn = 5;
-byte outputValue = 50;
-byte increment_per_attempt = 20; 
 
 // Create the MCP9808 temperature sensor object
 Adafruit_MCP9808 t1 = Adafruit_MCP9808();
@@ -110,14 +118,22 @@ void setup() {
 
 void loop() {
   //wake up MCP9808 - power consumption ~200 mikro Ampere
-  //wake_sensors();
-  //read_sensors();
-  //print_data_sensors();
-  //delay(2000);
-  //shutdown_wake_sensor();
-  //int face = 1;
-  //activate_resistor(face);
-  //Serial.println("waiting...");
+  if (flag_i2c_start_temp == 1){
+    wake_sensors();
+    flag_i2c_start_temp = 0;
+  }
+  if (flag_i2c_stop_temp == 1){
+    shutdown_wake_sensor();
+    flag_i2c_stop_temp = 0;
+  }
+  if (flag_i2c_sample_temp == 1){
+    read_sensors();
+    flag_i2c_sample_temp = 0;
+  }
+  if (flag_burn_face == 1){
+    activate_resistor(face_to_burn);
+    flag_burn_face = 0;
+  }
   delay(100);
 }
 
@@ -125,25 +141,40 @@ void readMasterWrite(int howMany){
   cmd_num = Wire.read();
   cmd_value = Wire.read();    // receive byte as an integer
   
-  if (cmd_num == START_SENSORS_TEMP){
-    wake_sensors();
+  Serial.print(cmd_num); Serial.print("\t"); Serial.println(cmd_value);
+
+  if (cmd_num == START_SENSORS_TEMP){     // 30
+    //wake_sensors();
+    flag_i2c_start_temp = 1;
   }
-  else if (cmd_num == STOP_SENSORS_TEMP){
-    shutdown_wake_sensor();
+  else if (cmd_num == STOP_SENSORS_TEMP){ // 31
+    //shutdown_wake_sensor();
+    flag_i2c_stop_temp = 1;
   }
-  else if (cmd_num == BURN_FACE){
-    activate_resistor(cmd_value);
+  else if (cmd_num == GET_TEMP){          // 32
   }
-  else if (cmd_num == GET_TEMP){
-    read_sensors();
-  }
-  else if (cmd_num == READ_SW_FACE){
+  else if (cmd_num == READ_SW_FACE){      // 33
     read_sw_state(cmd_value);
+  }
+  else if (cmd_num == BURN_FACE){         // 34
+    //activate_resistor(cmd_value);
+    flag_burn_face = 1;
+    face_to_burn = cmd_value;
+  }
+  else if (cmd_num == SET_BURN){          // 35
+    set_burn_config();
+  }
+  else if (cmd_num == SENSORS_TEMP_STATUS) { // 36
+  }
+  else if (cmd_num == SAMPLE_TEMP){       //37
+    Serial.println("reading");
+    flag_i2c_sample_temp = 1;
+    // read_sensors();
   }
   }
 
 void responseToMasterRead(){
-  if (cmd_num == START_SENSORS_TEMP){
+  if (cmd_num == START_SENSORS_TEMP){  // 30
     if (flag_i2c_error_temp == 0){
       Wire.write(flag_i2c_error_temp);
     }
@@ -151,9 +182,10 @@ void responseToMasterRead(){
       Wire.write(flag_i2c_error_temp);
     }
   }
-  else if (cmd_num == GET_TEMP){
-    current_temp[0] = 123.1;
-    current_temp[1] = 11.1;
+  else if (cmd_num == STOP_SENSORS_TEMP){
+    Wire.write(0);
+  }
+  else if (cmd_num == GET_TEMP){ // 32
     Wire.write((byte *) current_temp, sizeof(current_temp));
   }
   else if (cmd_num == READ_SW_FACE){
@@ -162,6 +194,9 @@ void responseToMasterRead(){
   }
   else if (cmd_num == SENSORS_TEMP_STATUS){
     Wire.write(flag_i2c_error_temp);
+  }
+  else if (cmd_num == SAMPLE_TEMP){
+    Wire.write(0);
   }
 }
 
@@ -182,61 +217,90 @@ void read_sw_state(int face){
 
 void activate_resistor(int face){
   int selected_pin;
-  bool active = false;
+  int active = 0;
   if (face == 1){
     if (digitalRead(pin_sw_x_plus) == 1){
       selected_pin = pin_burn_x_plus;
+      active = 1;
     }
   }
   else if (face == 3){
     if (digitalRead(pin_sw_x_minus) == 1){
       selected_pin = pin_burn_x_minus;
+      active = 1;
     }
   }
   else if (face == 2){
     if (digitalRead(pin_sw_y_plus) == 1){
       selected_pin = pin_burn_y_plus;
+      active = 1;
     }
   }
   else if (face == 4){
     if (digitalRead(pin_sw_y_minus) == 1){
       selected_pin = pin_burn_y_minus;
+      active = 1;
     }
   }  
 
-  if (active) {
+  if (active == 1) {
     for (int i=0; i < attempt_burn; i++){
-      current_time = millis();
+      current_time = 0;
       Serial.print("Attempt"); Serial.print("\t");
       Serial.println(i);
-      while (millis() < current_time + period_time){
-        digitalWrite(selected_pin, HIGH);
+      while (current_time < period_time){
+        Serial.print(current_time);
+        read_sw_state(face);
+        if (state_sw == 1){
+          Serial.print("h");
+          digitalWrite(selected_pin, HIGH);
+        }
+        else{
+          Serial.print("l");
+          digitalWrite(selected_pin, LOW);
+          break; 
+        }
+        int dt = 50;
+        delay(dt);
+        current_time = current_time + dt;
       }
+      read_sw_state(face);
+      if (state_sw == 0){break;}
       digitalWrite(selected_pin, LOW);
       delay(int (period_time / 2));
+      Serial.println("d");
     }
   }
+}
+
+void set_burn_config(){
+  attempt_burn = cmd_value;
+  Serial.println(attempt_burn);
 }
 
 void print_data_sensors(){
   for (int i=0; i < 2; i++){
     Serial.print(current_temp[i], 4); Serial.print("\t");
     }
-  //Serial.print(current_temp[7], 4); Serial.println("\t"); 
+  Serial.print("\n"); 
 }
 
 void read_sensors(){    
-  current_temp[0] = (int)(t1.readTempC()*1000);
-  current_temp[1] = (int)(t2.readTempC()*1000);
+  Wire.setClock(100000);
+  current_temp[0] = t1.readTempC();
+  current_temp[1] = t2.readTempC();
   /*current_temp[2] = (int)(t3.readTempC()*1000);
   current_temp[3] = (int)(t4.readTempC()*1000);
   current_temp[4] = (int)(t5.readTempC()*1000);
   current_temp[5] = (int)(t6.readTempC()*1000);
   current_temp[6] = (int)(t7.readTempC()*1000);
   current_temp[7] = (int)(t8.readTempC()*1000);  
-  */}
+  */ 
+  Wire.begin(I2C_SLAVE_ADDR);
+}
 
 void wake_sensors(){
+  Wire.setClock(100000);
   if (flag_i2c_error_temp == 0){
     t1.wake();
     t2.wake();
@@ -245,11 +309,13 @@ void wake_sensors(){
     t5.wake();
     t6.wake();
     t7.wake();
-    t8.wake();
-  */}
+    t8.wake();*/
+  }
+  Wire.begin(I2C_SLAVE_ADDR);
 }
 
 void shutdown_wake_sensor(){
+  Wire.setClock(100000);
   t1.shutdown_wake(1);
   t2.shutdown_wake(1);
   /*t3.shutdown_wake(1);
@@ -258,7 +324,9 @@ void shutdown_wake_sensor(){
   t6.shutdown_wake(1);
   t7.shutdown_wake(1);
   t8.shutdown_wake(1);
-  */}
+  */
+  Wire.begin(I2C_SLAVE_ADDR);
+}
 
 void get_resolution(){
   Serial.println (t1.getResolution());
