@@ -9,7 +9,23 @@
   //  1  0  1   0x1D
   //  1  1  0   0x1E
   //  1  1  1   0x1F
+const byte SENSOR_A1_1_ADDR = 0x18;
+const byte SENSOR_A1_2_ADDR = 0x19;
+const byte SENSOR_B1_1_ADDR = 0x1A;
+const byte SENSOR_B1_2_ADDR = 0x1B;
+const byte SENSOR_B2_1_ADDR = 0x1C;
+const byte SENSOR_B2_2_ADDR = 0x1D;
+
+
+const byte SENSOR_ADDR_ARRAY[6] = {SENSOR_A1_1_ADDR, SENSOR_A1_2_ADDR, SENSOR_B1_1_ADDR, SENSOR_B1_2_ADDR, SENSOR_B2_1_ADDR, SENSOR_B2_2_ADDR};
     
+const int SENSOR_A1_1_NUM = 0;
+const int SENSOR_A1_2_NUM = 1;
+const int SENSOR_B1_1_NUM = 2;
+const int SENSOR_B1_2_NUM = 3;
+const int SENSOR_B2_1_NUM = 4;
+const int SENSOR_B2_2_NUM = 5;
+
   // Mode Resolution SampleTime
   //  0    0.5°C       30 ms
   //  1    0.25°C      65 ms
@@ -30,7 +46,7 @@ void shutdown_wake_sensor();
 void get_resolution();
 void init_i2c_sensor();
 union temp_sensor_Union;
-void setup_temp_sensors();
+void setup_temp_sensors(int array_addr[]);
 void set_temp_resolution();
 void run_loop_for_temp_sensors();
 void cmd2Term(int cmd_num, int cmd_value);

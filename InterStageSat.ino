@@ -14,8 +14,17 @@ void setup() {
   // debug usb
   Serial.begin(9600);
   Serial.print("Started ...");
+  
+  //A1
+  //array_temp_selected[0] = SENSOR_A1_1_NUM;
+  //array_temp_selected[1] = SENSOR_A1_2_NUM;
 
-  setup_temp_sensors();
+  //B1
+  array_temp_selected[0] = SENSOR_B1_1_NUM;
+  array_temp_selected[1] = SENSOR_B1_2_NUM;
+
+
+  setup_temp_sensors(array_temp_selected);
 
   if (asSlave){
     Serial.println(" as Slave");
