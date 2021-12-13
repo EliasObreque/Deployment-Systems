@@ -1,3 +1,16 @@
+/*
+Elías Obreque
+els.obrq@gmail.com
+
+Atmega Nanoarduino
+
+i2c pi
+----------
+A4: SDA
+A5: SCL
+
+*/
+
 #include <Wire.h>
 
 #define START_SENSORS_TEMP 30
@@ -19,9 +32,18 @@ void setup() {
   // put your setup code here, to run once:
   Wire.begin();
   Serial.begin(9600);
+
+  pinMode(7, INPUT);
 }
 
 void loop() {
+
+	if (digitalRead(7) == HIGH){
+		Wire.beginTransmission(I2C_SLAVE_ADDR); // transmit to device #40
+		Wire.write((int) BURN_FACE);        // sends five bytes
+		Wire.write((int) 1);              // sends one byte  
+		Wire.endTransmission();    // stop transmitting
+	};
   // put your main code here, to run repeatedly:
  	while (Serial.available()){
  	delay(4);
@@ -131,27 +153,32 @@ void request_to_slave(int selected_cmd){
 	    Serial.print((int) face); Serial.print("\t"); Serial.println(state);
   	}
    	else if (selected_cmd == GET_TEMP){
-	    const int VEC_MAX = 2;
+	    const int VEC_MAX = 8;
 	    float vec[VEC_MAX];
 	 
 	    Wire.requestFrom(I2C_SLAVE_ADDR, VEC_MAX * sizeof(float));
 
     	for (int i = 0; i < VEC_MAX; i++){
     		byte buff[VEC_MAX * sizeof(float)];
-			buff[0] = Wire.read();
-			buff[1] = Wire.read();
-			buff[2] = Wire.read();
-			buff[3] = Wire.read();
-
-			vec[i] = *((float*)(buff));
+				buff[0] = Wire.read();
+				buff[1] = Wire.read();
+				buff[2] = Wire.read();
+				buff[3] = Wire.read();
+				vec[i] = *((float*)(buff));
     		Serial.println(vec[i]);
     	}
 	}
     else if (selected_cmd == SENSORS_TEMP_STATUS){
-    	Wire.requestFrom(I2C_SLAVE_ADDR, 2);
-    	int status1 = Wire.read();
-    	Serial.println("status of sensors");
-    	Serial.print(status1);
+    	const int VEC_MAX = 8;
+	    int status_temp[VEC_MAX];
+    	Wire.requestFrom(I2C_SLAVE_ADDR, VEC_MAX * sizeof(int));
+    	for (int i=0; i < VEC_MAX; i++){
+    		byte buff[VEC_MAX * sizeof(int)];
+				buff[0] = Wire.read();	
+				buff[1] = Wire.read();
+				status_temp[i] = *((int*)(buff));
+				Serial.println(status_temp[i]); 
+    	}
     }
     else if (selected_cmd == SAMPLE_TEMP){
     	Wire.requestFrom(I2C_SLAVE_ADDR, 2);
