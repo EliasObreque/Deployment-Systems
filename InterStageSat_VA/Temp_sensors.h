@@ -1,5 +1,8 @@
 #include <Wire.h>
 
+// temp
+const int num_temp_sensor = 6;
+
   //  A2 A1 A0 address
   //  0  0  0   0x18  this is the default address
   //  0  0  1   0x19
@@ -9,6 +12,7 @@
   //  1  0  1   0x1D
   //  1  1  0   0x1E
   //  1  1  1   0x1F
+
 const byte SENSOR_A1_1_ADDR = 0x18;
 const byte SENSOR_A1_2_ADDR = 0x19;
 const byte SENSOR_B1_1_ADDR = 0x1A;
@@ -17,7 +21,7 @@ const byte SENSOR_B2_1_ADDR = 0x1C;
 const byte SENSOR_B2_2_ADDR = 0x1D;
 
 
-const byte SENSOR_ADDR_ARRAY[6] = {SENSOR_A1_1_ADDR, SENSOR_A1_2_ADDR, SENSOR_B1_1_ADDR, SENSOR_B1_2_ADDR, SENSOR_B2_1_ADDR, SENSOR_B2_2_ADDR};
+const byte SENSOR_ADDR_ARRAY[num_temp_sensor] = {SENSOR_A1_1_ADDR, SENSOR_A1_2_ADDR, SENSOR_B1_1_ADDR, SENSOR_B1_2_ADDR, SENSOR_B2_1_ADDR, SENSOR_B2_2_ADDR};
     
 const int SENSOR_A1_1_NUM = 0;
 const int SENSOR_A1_2_NUM = 1;

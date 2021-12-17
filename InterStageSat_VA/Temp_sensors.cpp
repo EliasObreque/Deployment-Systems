@@ -3,27 +3,16 @@
 #include "Temp_sensors.h"
 
 // Create the MCP9808 temperature sensor object
-Adafruit_MCP9808 temp_array[4];
+Adafruit_MCP9808 temp_array[num_temp_sensor];
 
-/*Adafruit_MCP9808 t1 = Adafruit_MCP9808();
-Adafruit_MCP9808 t2 = Adafruit_MCP9808();
-Adafruit_MCP9808 t3 = Adafruit_MCP9808();
-Adafruit_MCP9808 t4 = Adafruit_MCP9808();
-Adafruit_MCP9808 t5 = Adafruit_MCP9808();
-Adafruit_MCP9808 t6 = Adafruit_MCP9808();
-Adafruit_MCP9808 t7 = Adafruit_MCP9808();
-Adafruit_MCP9808 t8 = Adafruit_MCP9808();*/
-
-// temp
-const int num_temp_sensor = 4;
 float current_temp[num_temp_sensor];
 
 // flags 
-int flag_i2c_error_temp[4];
+int flag_i2c_error_temp[num_temp_sensor];
 int flag_i2c_start_temp = 0;
 int flag_i2c_stop_temp = 0;
 int flag_i2c_sample_temp = 0;
-int array_addr_num[4];
+int array_addr_num[num_temp_sensor];
 
 union temp_sensor_Union  
 {
@@ -32,14 +21,14 @@ union temp_sensor_Union
 };
 
 void setup_temp_sensors(int array_addr[]){
-  for (int i=0; i < sizeof(array_addr); i++){
+  for (int i=0; i < num_temp_sensor; i++){
     if (array_addr[i] < 6){ 
       temp_array[i] = Adafruit_MCP9808();
       array_addr_num[i] = array_addr[i];
     }
   }
 
-	Serial.print("Init sensor ...");
+	Serial.println("Init sensor ...");
 	init_i2c_sensor();
 	wake_sensors();
 }
@@ -96,14 +85,14 @@ void response_from_Temp(int cmd_num){
 
 
 void print_data_sensors(){
-  for (int i=0; i < 2; i++){
+  for (int i=0; i < num_temp_sensor; i++){
     Serial.print(current_temp[i], 4); Serial.print("\t");
     }
   Serial.print("\n"); 
 }
 
 void read_sensors(){ 
-  for (int i = 0; i < sizeof(array_addr_num); i++){
+  for (int i = 0; i < num_temp_sensor; i++){
     if (flag_i2c_error_temp[i] == 0){
       current_temp[i] = temp_array[i].readTempC();
     }  
@@ -111,7 +100,7 @@ void read_sensors(){
 }
 
 void wake_sensors(){
-  for (int i = 0; i < sizeof(array_addr_num); i++){
+  for (int i = 0; i < num_temp_sensor; i++){
     if (flag_i2c_error_temp[i] == 0){
       temp_array[i].wake();
     }
@@ -119,7 +108,7 @@ void wake_sensors(){
 }
 
 void shutdown_wake_sensor(){
-  for (int i = 0; i < sizeof(array_addr_num); i++){
+  for (int i = 0; i < num_temp_sensor; i++){
     if (flag_i2c_error_temp[i] == 0){
       temp_array[i].shutdown_wake(1);
     }
@@ -131,16 +120,18 @@ void get_resolution(){
   }
 
 void init_i2c_sensor(){
-  for (int i = 0; i < sizeof(array_addr_num); i++){
+  for (int i = 0; i < num_temp_sensor; i++){
+  	Serial.print(i); Serial.print(" - ");
     if (!temp_array[i].begin(SENSOR_ADDR_ARRAY[array_addr_num[i]])) {
       flag_i2c_error_temp[i] = 1;
-    }
+      Serial.println(1);
+    }else{Serial.println(0);}
   }
     set_temp_resolution();
   }
   
 void set_temp_resolution(){   
-  for (int i = 0; i < sizeof(array_addr_num); i++){
+  for (int i = 0; i < num_temp_sensor; i++){
     if (flag_i2c_error_temp[i] == 0){
       temp_array[i].setResolution(3);  
     }
@@ -148,7 +139,7 @@ void set_temp_resolution(){
 }
 
 void check_i2c_sensor(){
-  for (int i = 0; i < sizeof(array_addr_num); i++){  
+  for (int i = 0; i < num_temp_sensor; i++){  
     if (!temp_array[i].begin(SENSOR_ADDR_ARRAY[array_addr_num[i]])) {
       Serial.println(array_addr_num[i]);
     }

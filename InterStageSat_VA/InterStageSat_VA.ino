@@ -3,11 +3,13 @@
 Elias Obreque S.
 
 els.obrq@gmail.com
-InterStage Custom v3
+InterStage A Custom v3
 */
 /**************************************************************************/
 
-#include "InterStageSat.h"
+#include "InterStageSat_VA.h"
+
+PhotoDiodeFSS sensor_fss; 
 
 void setup() {
 
@@ -15,25 +17,28 @@ void setup() {
   Serial.begin(9600);
   Serial.print("Started ...");
   
-  //A1
-  //array_temp_selected[0] = SENSOR_A1_1_NUM;
-  //array_temp_selected[1] = SENSOR_A1_2_NUM;
+  array_temp_selected[0] = SENSOR_A1_1_NUM;
+  array_temp_selected[1] = SENSOR_A1_2_NUM;
+  array_temp_selected[2] = SENSOR_B1_1_NUM;
+  array_temp_selected[3] = SENSOR_B1_2_NUM;
+  array_temp_selected[4] = SENSOR_B2_1_NUM;
+  array_temp_selected[5] = SENSOR_B2_2_NUM;
 
-  //B1
-  array_temp_selected[0] = SENSOR_B1_1_NUM;
-  array_temp_selected[1] = SENSOR_B1_2_NUM;
-
-
-  setup_temp_sensors(array_temp_selected);
 
   if (asSlave){
     Serial.println(" as Slave");
-    Wire.begin(I2C_SLAVE_ADDR);               
+    Wire.begin(I2C_SLAVE_ADDR_A);               
     Wire.onReceive(readMasterWrite);
     Wire.onRequest(responseToMasterRead);
-  };
+  }else{
+    Serial.println(" as Master");
+    Wire.begin();
+  }
 
+  setup_temp_sensors(array_temp_selected);
   setup_burning();
+  sensor_fss.Mode();
+  sensor_fss.setDefault();
 }
 
 void loop() {
@@ -48,6 +53,11 @@ void loop() {
     print_data_sensors();
     read_sw_state(1);
     activate_resistor(1);
+
+    sensor_fss.read();
+    sensor_fss.print();
+    delay(500);
+
   }
   delay(100);
 }
