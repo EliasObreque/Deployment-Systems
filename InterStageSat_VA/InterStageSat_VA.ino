@@ -49,13 +49,15 @@ void loop() {
     run_loop_for_burn_resistor();
   }
   else {
-    read_sensors();
-    print_data_sensors();
+    //read_sensors();
+    //print_data_sensors();
     read_sw_state(1);
     activate_resistor(1);
 
     sensor_fss.read();
-    sensor_fss.print();
+    //sensor_fss.print();
+    sensor_fss.calc_sun_position();
+    sensor_fss.get_sun_vector();
     delay(500);
 
   }
@@ -71,6 +73,8 @@ void readMasterWrite(int howMany){
   cmd2Term(cmd_num, cmd_value);
 
   cmd2Burn(cmd_num, cmd_value);
+
+  cmd2FSS(cmd_num, cmd_value);
   }
 
 void responseToMasterRead(){

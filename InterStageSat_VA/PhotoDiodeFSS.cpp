@@ -11,7 +11,10 @@ void PhotoDiodeFSS::Mode(void){
 }
 
 void PhotoDiodeFSS::setDefault(){
-	
+	rotationT[0][0] = cos(gamma);
+	rotationT[0][1] = sin(gamma);
+	rotationT[1][0] = -sin(gamma);
+	rotationT[1][1] = cos(gamma);
 }
 
 void PhotoDiodeFSS::read(){
@@ -30,4 +33,76 @@ void PhotoDiodeFSS::print(){
 		Serial.print(pd_measure[i]); Serial.print("\t");
 	}
 	Serial.print("\n");
+}
+
+void PhotoDiodeFSS::calc_sun_position(){
+	float A = float(pd_measure[2]);
+	float B = float(pd_measure[3]);
+	float C = float(pd_measure[1]);
+	float D = float(pd_measure[0]);
+
+	// Serial.print(A); Serial.print("-"); Serial.print(B); Serial.print("-");Serial.print(C); Serial.print("-");Serial.println(D);
+
+	float den = (A + B + C + D);
+	if (den != 0){
+		float xd = (A + B - C -D) / den + x0;
+		float yd = (A + D - C -B) / den + y0;
+		sun_vector_d[0] = rotationT[0][0] * xd + rotationT[0][1] * yd;
+		sun_vector_d[1] = rotationT[1][0] * xd + rotationT[1][1] * yd;
+	
+		phi = atan2(sun_vector_d[0], sun_vector_d[1]);
+		theta = atan(sqrt(pow(sun_vector_d[0], 2) + pow(sun_vector_d[1], 2)) / h);
+
+	} else {
+		// Shadow zone
+		sun_vector_d[0] = 2;
+		sun_vector_d[1] = 2;
+
+		phi = 0.0;
+		theta = - M_PI;
+	}
+
+	float xfss = cos(theta);
+	float yfss = sin(theta) * cos(phi);
+	float zfss = sin(theta) * sin(phi);
+
+	sun_vector_c[0] = xfss;
+	sun_vector_c[1] = yfss;
+	sun_vector_c[2] = zfss;
+}
+
+void PhotoDiodeFSS::get_sun_vector(){
+	for (int i=0; i < 2; i++){
+		Serial.print(sun_vector_d[i]); Serial.print("\t");
+	}
+	Serial.print("\n");
+
+	for (int i=0; i < 3; i++){
+		Serial.print(sun_vector_c[i]); Serial.print("\t");
+	}
+	Serial.print("\n");
+}
+
+void PhotoDiodeFSS::cmd2FSS(int cmd_num,int  cmd_value){
+	if (cmd_num == START_SENSORS_TEMP){     // 30
+	    flag_i2c_sampe_fss = 1;
+	}
+}
+
+void PhotoDiodeFSS::response_from_FSS(int cmd_num){
+	if (cmd_num == START_SENSORS_TEMP){  // 30
+		Wire.write(0);
+	}
+	else if (cmd_num == STOP_SENSORS_TEMP){
+		Wire.write(0);
+	}
+	else if (cmd_num == GET_TEMP){ // 32
+		Wire.write((byte *) current_temp, sizeof(current_temp));
+	}
+	else if (cmd_num == SENSORS_TEMP_STATUS){
+		Wire.write((byte *) flag_i2c_error_temp, sizeof(flag_i2c_error_temp));
+	}
+	else if (cmd_num == SAMPLE_TEMP){
+		Wire.write(0);
+	}
 }
