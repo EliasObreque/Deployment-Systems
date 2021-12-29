@@ -45,7 +45,7 @@ void loop() {
 
   if (asSlave){
     run_loop_for_temp_sensors();
-
+    sensor_fss.run_loop_for_fss();
     run_loop_for_burn_resistor();
   }
   else {
@@ -74,16 +74,12 @@ void readMasterWrite(int howMany){
 
   cmd2Burn(cmd_num, cmd_value);
 
-  cmd2FSS(cmd_num, cmd_value);
+  sensor_fss.cmd2FSS(cmd_num);
   }
 
 void responseToMasterRead(){
-
-  //if (cmd_num == START_SENSORS_TEMP || cmd_num == STOP_SENSORS_TEMP){
-  response_from_Temp(cmd_num);
-  //}
-  
-  
+  response_from_Temp(cmd_num); 
   response_from_Burn(cmd_num, cmd_value);
+  sensor_fss.response_from_FSS(); 
 }
 

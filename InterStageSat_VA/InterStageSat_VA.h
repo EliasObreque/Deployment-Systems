@@ -11,4 +11,4 @@ int array_temp_selected[num_temp_sensor] = {7, 7, 7, 7, 7, 7};
 int cmd_num = 10;
 int cmd_value = 5;
 
-bool asSlave = false;
+bool asSlave = true;

@@ -35,6 +35,13 @@ void PhotoDiodeFSS::print(){
 	Serial.print("\n");
 }
 
+void PhotoDiodeFSS::run_loop_for_fss(){
+	if (flag_i2c_sample_fss == 1){
+		read();
+		calc_sun_position();
+	}
+}
+
 void PhotoDiodeFSS::calc_sun_position(){
 	float A = float(pd_measure[2]);
 	float B = float(pd_measure[3]);
@@ -83,26 +90,26 @@ void PhotoDiodeFSS::get_sun_vector(){
 	Serial.print("\n");
 }
 
-void PhotoDiodeFSS::cmd2FSS(int cmd_num,int  cmd_value){
-	if (cmd_num == START_SENSORS_TEMP){     // 30
-	    flag_i2c_sampe_fss = 1;
+void PhotoDiodeFSS::cmd2FSS(int cmd_num){
+	if (cmd_num == SAMPLE_SENSORS_FSS){     // 38
+	    flag_i2c_sample_fss = 1;
+	}
+	else if (cmd_num == STOP_SENSORS_FSS){
+		flag_i2c_sample_fss = 0;
+	}
+	else if (cmd_num == GET_SUN_VECTOR_FSS){
+		flag_i2c_get_fss = 1;
 	}
 }
 
-void PhotoDiodeFSS::response_from_FSS(int cmd_num){
-	if (cmd_num == START_SENSORS_TEMP){  // 30
+void PhotoDiodeFSS::response_from_FSS(){
+	if (flag_i2c_sample_fss == 1){  // 38
 		Wire.write(0);
 	}
-	else if (cmd_num == STOP_SENSORS_TEMP){
-		Wire.write(0);
+	else if (flag_i2c_get_fss == 1){ // 39
+		Wire.write((byte *) sun_vector_c, sizeof(sun_vector_c));
 	}
-	else if (cmd_num == GET_TEMP){ // 32
-		Wire.write((byte *) current_temp, sizeof(current_temp));
-	}
-	else if (cmd_num == SENSORS_TEMP_STATUS){
-		Wire.write((byte *) flag_i2c_error_temp, sizeof(flag_i2c_error_temp));
-	}
-	else if (cmd_num == SAMPLE_TEMP){
+	else if (flag_i2c_sample_fss == 0){
 		Wire.write(0);
 	}
 }

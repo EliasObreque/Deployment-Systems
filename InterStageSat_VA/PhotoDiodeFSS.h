@@ -8,6 +8,7 @@
 
 #define SAMPLE_SENSORS_FSS 38;
 #define GET_SUN_VECTOR_FSS 39;
+#define STOP_SENSORS_FSS 40;
 
 void setup_photodiodo();
 
@@ -23,6 +24,8 @@ private:
 	float theta;
 	float rad2deg = 180.0 / M_PI;
 	float deg2rad = 1 / rad2deg;
+	int flag_i2c_sample_fss = 0;
+	int flag_i2c_get_fss = 0;
 
 public:
 	// Public Members
@@ -42,8 +45,8 @@ public:
 	void calc_sun_vector();
 	void calc_sun_position();
 	void get_sun_vector();
+	void run_loop_for_fss();
 	void print(void);
-	void cmd2FSS(void);
+	void cmd2FSS(int cmd_num);
 	void response_from_FSS(void);
-	
 };
