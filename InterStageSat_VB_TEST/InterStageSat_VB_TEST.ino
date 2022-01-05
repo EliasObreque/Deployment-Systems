@@ -8,7 +8,7 @@ InterStage B Custom v3
 /**************************************************************************/
 
 
-#include "InterStageSat_VB.h"
+#include "InterStageSat_VB_TEST.h"
 
 PhotoDiodeFSS sensor_fss; 
 
@@ -23,7 +23,16 @@ void setup() {
     Wire.begin(I2C_SLAVE_ADDR_B);               
     //Wire.onReceive(readMasterWrite);
     //Wire.onRequest(responseToMasterRead);
-  }else{Serial.println(" as Master"); Wire.begin();}
+  }else{
+    array_temp_selected[0] = SENSOR_A1_1_NUM;
+    array_temp_selected[1] = SENSOR_A1_2_NUM;
+    array_temp_selected[2] = SENSOR_B1_1_NUM;
+    array_temp_selected[3] = SENSOR_B1_2_NUM;
+    array_temp_selected[4] = SENSOR_B2_1_NUM;
+    array_temp_selected[5] = SENSOR_B2_2_NUM;
+    Serial.println(" as Master");
+    setup_temp_sensors(array_temp_selected);
+  }
 
   setup_burning();
   sensor_fss.Mode();
@@ -37,6 +46,9 @@ void loop() {
     sensor_fss.run_loop_for_fss();
   }
   else {
+    read_sensors();
+    print_data_sensors();
+    
     read_sw_state(1);
     activate_resistor(1);
 
