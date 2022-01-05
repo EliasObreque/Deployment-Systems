@@ -21,6 +21,9 @@ A5: SCL
 #define SET_BURN 35
 #define SENSORS_TEMP_STATUS 36
 #define SAMPLE_TEMP 37
+#define SAMPLE_SENSORS_FSS 38
+#define GET_SUN_VECTOR_FSS 39
+#define STOP_SENSORS_FSS 40
 
 
 const byte I2C_SLAVE_ADDR = 0x40;
@@ -87,7 +90,7 @@ void sendCom(String data, String value){
 		selected_cmd = START_SENSORS_TEMP;
     	selected_value = 0;
     }
-    else if (data == "is2_stop_sensors"){
+   else if (data == "is2_stop_sensors"){
     	Serial.println("cmd stop");
 		selected_cmd = STOP_SENSORS_TEMP;
     	selected_value = 0;	

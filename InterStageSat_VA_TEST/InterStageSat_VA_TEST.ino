@@ -7,7 +7,7 @@ InterStage A Custom v3
 */
 /**************************************************************************/
 
-#include "InterStageSat_VA.h"
+#include "InterStageSat_VA_TEST.h"
 
 PhotoDiodeFSS sensor_fss; 
 
@@ -47,6 +47,7 @@ void loop() {
     run_loop_for_temp_sensors();
     run_loop_for_burn_resistor();
     sensor_fss.run_loop_for_fss();
+    Wire.begin();
     
   }
   else {
@@ -56,6 +57,7 @@ void loop() {
     activate_resistor(1);
 
     sensor_fss.read();
+    //sensor_fss.print();
     sensor_fss.calc_sun_position();
     sensor_fss.get_sun_vector();
     delay(500);
