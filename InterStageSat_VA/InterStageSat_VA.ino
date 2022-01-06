@@ -44,10 +44,9 @@ void setup() {
 void loop() {
 
   if (asSlave){
-    run_loop_for_temp_sensors();
+    //run_loop_for_temp_sensors();
     run_loop_for_burn_resistor();
-    sensor_fss.run_loop_for_fss();
-    
+    sensor_fss.run_loop_for_fss();    
   }
   else {
     read_sensors();
@@ -63,6 +62,7 @@ void loop() {
   }
   delay(100);
 }
+
 
 void readMasterWrite(int howMany){
   cmd_num = Wire.read();

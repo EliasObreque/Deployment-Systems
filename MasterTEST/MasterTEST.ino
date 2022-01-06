@@ -126,7 +126,19 @@ void sendCom(String data, String value){
 		selected_cmd = SAMPLE_TEMP;
 		selected_value = 0;
 	}
-	
+	else if (data == 'is2_sample_fss'){
+		selected_cmd = SAMPLE_SENSORS_FSS;
+		selected_value = 0;
+	}
+	else if (data == 'is2_stop_fss'){
+		selected_cmd = STOP_SENSORS_FSS;
+		selected_value = 0;
+	}
+	else if (data == 'is2_get_fss'){
+		selected_cmd = GET_SUN_VECTOR_FSS;
+		selected_value = 0;
+	}
+
 	Wire.beginTransmission(I2C_SLAVE_ADDR); // transmit to device #40
   	Wire.write((int) selected_cmd);        // sends five bytes
   	Wire.write((int) selected_value);              // sends one byte  

@@ -21,8 +21,8 @@ void setup() {
   if (asSlave){
     Serial.println(" as Slave");
     Wire.begin(I2C_SLAVE_ADDR_B);               
-    //Wire.onReceive(readMasterWrite);
-    //Wire.onRequest(responseToMasterRead);
+    Wire.onReceive(readMasterWrite);
+    Wire.onRequest(responseToMasterRead);
   }else{Serial.println(" as Master"); Wire.begin();}
 
   setup_burning();
@@ -49,14 +49,16 @@ void loop() {
 }
 
 void readMasterWrite(int howMany){
-  cmd_num = Wire.read();
+  cmd_num   = Wire.read();
   cmd_value = Wire.read();    // receive byte as an integer
   
   //Serial.print(cmd_num); Serial.print("\t"); Serial.println(cmd_value);
   cmd2Burn(cmd_num, cmd_value);
+  sensor_fss.cmd2FSS(cmd_num);
   }
 
 void responseToMasterRead(){  
   response_from_Burn(cmd_num, cmd_value);
+  sensor_fss.response_from_FSS(cmd_num); 
 }
 
