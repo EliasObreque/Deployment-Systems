@@ -40,6 +40,10 @@ void PhotoDiodeFSS::run_loop_for_fss(){
 		read();
 		calc_sun_position();
 	}
+	if (flag_i2c_get_fss == 1){
+		get_sun_vector();
+		flag_i2c_get_fss = 0;
+	}
 }
 
 void PhotoDiodeFSS::calc_sun_position(){
@@ -73,16 +77,16 @@ void PhotoDiodeFSS::calc_sun_position(){
 	float yfss = sin(theta) * cos(phi);
 	float zfss = sin(theta) * sin(phi);
 
-	sun_vector_c[0] = xfss;
-	sun_vector_c[1] = yfss;
-	sun_vector_c[2] = zfss;
+	sun_vector_c[0] = xfss*1000.0; // Scale
+	sun_vector_c[1] = yfss*1000.0;
+	sun_vector_c[2] = zfss*1000.0;
 }
 
 void PhotoDiodeFSS::get_sun_vector(){
-	for (int i = 0; i < 2; i++){
-		Serial.print(sun_vector_d[i]); Serial.print("\t");
-	}
-	Serial.print("\n");
+	//for (int i = 0; i < 2; i++){
+	//	Serial.print(sun_vector_d[i]); Serial.print("\t");
+	//}
+	//Serial.print("\n");
 
 	for (int i = 0; i < 3; i++){
 		Serial.print(sun_vector_c[i]); Serial.print("\t");
@@ -107,6 +111,7 @@ void PhotoDiodeFSS::response_from_FSS(int cmd_num){
 		Wire.write(0);
 	}
 	else if (cmd_num == GET_SUN_VECTOR_FSS){ // 39
+		get_sun_vector();
 		Wire.write((byte *) sun_vector_c, sizeof(sun_vector_c));
 	}
 	else if (cmd_num == STOP_SENSORS_FSS){ // 40

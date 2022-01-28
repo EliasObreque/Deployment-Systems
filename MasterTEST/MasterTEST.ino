@@ -126,15 +126,15 @@ void sendCom(String data, String value){
 		selected_cmd = SAMPLE_TEMP;
 		selected_value = 0;
 	}
-	else if (data == 'is2_sample_fss'){
+	else if (data == "is2_sample_fss"){
 		selected_cmd = SAMPLE_SENSORS_FSS;
 		selected_value = 0;
 	}
-	else if (data == 'is2_stop_fss'){
+	else if (data == "is2_stop_fss"){
 		selected_cmd = STOP_SENSORS_FSS;
 		selected_value = 0;
 	}
-	else if (data == 'is2_get_fss'){
+	else if (data == "is2_get_fss"){
 		selected_cmd = GET_SUN_VECTOR_FSS;
 		selected_value = 0;
 	}
@@ -150,39 +150,38 @@ void sendCom(String data, String value){
 void request_to_slave(int selected_cmd){
   	if (selected_cmd == START_SENSORS_TEMP){
   		Wire.requestFrom(I2C_SLAVE_ADDR, 2);
-		int state = Wire.read();
-		Serial.println("start temp");
-		Serial.println(state);
+			int state = Wire.read();
+			Serial.println("start temp");
+			Serial.println(state);
    	} 
    	else if (selected_cmd == STOP_SENSORS_TEMP){
    		Wire.requestFrom(I2C_SLAVE_ADDR, 2);
-		int state = Wire.read();
-		Serial.println("stop temp");
-		Serial.println(state);
+			int state = Wire.read();
+			Serial.println("stop temp");
+			Serial.println(state);
    	}
-	else if (selected_cmd == READ_SW_FACE){
-		Wire.requestFrom(I2C_SLAVE_ADDR, 2);
+		else if (selected_cmd == READ_SW_FACE){
+			Wire.requestFrom(I2C_SLAVE_ADDR, 2);
 	    int face = Wire.read();
 	    int state = Wire.read();
 	    Serial.println("read sw");
 	    Serial.print((int) face); Serial.print("\t"); Serial.println(state);
   	}
    	else if (selected_cmd == GET_TEMP){
-	    const int VEC_MAX = 8;
+	    const int VEC_MAX = 6;
 	    float vec[VEC_MAX];
 	 
 	    Wire.requestFrom(I2C_SLAVE_ADDR, VEC_MAX * sizeof(float));
 
     	for (int i = 0; i < VEC_MAX; i++){
     		byte buff[VEC_MAX * sizeof(float)];
-				buff[0] = Wire.read();
-				buff[1] = Wire.read();
-				buff[2] = Wire.read();
-				buff[3] = Wire.read();
+				for (int j=0; j < sizeof(float); j++){
+					buff[j] = Wire.read();
+				}
 				vec[i] = *((float*)(buff));
     		Serial.println(vec[i]);
     	}
-	}
+		}
     else if (selected_cmd == SENSORS_TEMP_STATUS){
     	const int VEC_MAX = 8;
 	    int status_temp[VEC_MAX];
@@ -197,10 +196,35 @@ void request_to_slave(int selected_cmd){
     }
     else if (selected_cmd == SAMPLE_TEMP){
     	Wire.requestFrom(I2C_SLAVE_ADDR, 2);
-		int state = Wire.read();
-		Serial.println("sample temp");
-		Serial.println(state);
+			int state = Wire.read();
+			Serial.println("sample temp");
+			Serial.println(state);
     } 
+    else if (selected_cmd == SAMPLE_SENSORS_FSS){
+    	Wire.requestFrom(I2C_SLAVE_ADDR, 2);
+			int state = Wire.read();
+			Serial.println("sample fss");
+			Serial.println(state);
+    }
+    else if (selected_cmd == STOP_SENSORS_FSS){
+    	Wire.requestFrom(I2C_SLAVE_ADDR, 2);
+			int state = Wire.read();
+			Serial.println("stop fss");
+			Serial.println(state);
+    }
+    else if (selected_cmd == GET_SUN_VECTOR_FSS){
+    	const int VEC_MAX = 3;
+	    float status_fss[VEC_MAX];
+    	Wire.requestFrom(I2C_SLAVE_ADDR, VEC_MAX * sizeof(float));
+    	for (int i=0; i < VEC_MAX; i++){
+    		byte buff[VEC_MAX * sizeof(float)];
+    		for (int j=0; j < sizeof(float); j++){
+					buff[j] = Wire.read();
+				}
+				status_fss[i] = *((float*)(buff));
+				Serial.println(status_fss[i]); 
+    	}
+    }
 }
 
 float getFloat(byte packet[], int i)

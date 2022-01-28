@@ -62,6 +62,7 @@ void cmd2Term(int cmd_num,int  cmd_value){
 	}
 	else if (cmd_num == SAMPLE_TEMP){       //37
 	flag_i2c_sample_temp = 1;
+	Serial.println(flag_i2c_sample_temp);
 	}
 }
 
@@ -73,6 +74,7 @@ void response_from_Temp(int cmd_num){
 		Wire.write(0);
 	}
 	else if (cmd_num == GET_TEMP){ // 32
+		print_data_sensors();
 		Wire.write((byte *) current_temp, sizeof(current_temp));
 	}
 	else if (cmd_num == SENSORS_TEMP_STATUS){
@@ -92,27 +94,38 @@ void print_data_sensors(){
 }
 
 void read_sensors(){ 
+  Serial.print("Reading ...");
   for (int i = 0; i < num_temp_sensor; i++){
+  	Serial.print(i);
+    Serial.print(flag_i2c_error_temp[i]);
     if (flag_i2c_error_temp[i] == 0){
+    	Wire.begin();
       current_temp[i] = temp_array[i].readTempC();
+    	Wire.setClock(100000);
     }  
+    else{current_temp[i] = 777.0;}
   }
+  Serial.print("\n"); 
 }
 
 void wake_sensors(){
+	Wire.begin();
   for (int i = 0; i < num_temp_sensor; i++){
     if (flag_i2c_error_temp[i] == 0){
       temp_array[i].wake();
     }
   }
+  Wire.setClock(100000);
 }
 
 void shutdown_wake_sensor(){
+	Wire.begin();
   for (int i = 0; i < num_temp_sensor; i++){
     if (flag_i2c_error_temp[i] == 0){
       temp_array[i].shutdown_wake(1);
     }
   }
+  Wire.setClock(100000);
 }
 
 void get_resolution(){
@@ -120,20 +133,24 @@ void get_resolution(){
   }
 
 void init_i2c_sensor(){
+  Wire.begin();
   for (int i = 0; i < num_temp_sensor; i++){
   	Serial.print(i); Serial.print(" - ");
     if (!temp_array[i].begin(SENSOR_ADDR_ARRAY[array_addr_num[i]])) {
       flag_i2c_error_temp[i] = 1;
       Serial.println(1);
-    }else{Serial.println(0);}
+    }else{Serial.println(0); flag_i2c_error_temp[i] = 0;}
   }
     set_temp_resolution();
+  Wire.setClock(100000);
   }
   
 void set_temp_resolution(){   
   for (int i = 0; i < num_temp_sensor; i++){
     if (flag_i2c_error_temp[i] == 0){
+    	Wire.begin();
       temp_array[i].setResolution(3);  
+      Wire.setClock(100000);
     }
   }  
 }

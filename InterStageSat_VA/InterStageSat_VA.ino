@@ -44,7 +44,7 @@ void setup() {
 void loop() {
 
   if (asSlave){
-    //run_loop_for_temp_sensors();
+    run_loop_for_temp_sensors();
     run_loop_for_burn_resistor();
     sensor_fss.run_loop_for_fss();    
   }
@@ -68,7 +68,7 @@ void readMasterWrite(int howMany){
   cmd_num = Wire.read();
   cmd_value = Wire.read();    // receive byte as an integer
   
-  //Serial.print(cmd_num); Serial.print("\t"); Serial.println(cmd_value);
+  Serial.print(cmd_num); Serial.print("\t"); Serial.println(cmd_value);
 
   cmd2Term(cmd_num, cmd_value);
   cmd2Burn(cmd_num, cmd_value);
