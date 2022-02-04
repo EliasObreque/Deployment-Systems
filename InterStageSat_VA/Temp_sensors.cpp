@@ -94,10 +94,10 @@ void print_data_sensors(){
 }
 
 void read_sensors(){ 
-  Serial.print("Reading ...");
+  //Serial.print("Reading ...");
   for (int i = 0; i < num_temp_sensor; i++){
-  	Serial.print(i);
-    Serial.print(flag_i2c_error_temp[i]);
+  	//Serial.print(i);
+    //Serial.print(flag_i2c_error_temp[i]);
     if (flag_i2c_error_temp[i] == 0){
     	Wire.begin();
       current_temp[i] = temp_array[i].readTempC();

@@ -13,6 +13,8 @@ const int num_temp_sensor = 6;
   //  1  1  0   0x1E
   //  1  1  1   0x1F
 
+int array_temp_selected[num_temp_sensor] = {7, 7, 7, 7, 7, 7};
+
 const byte SENSOR_A1_1_ADDR = 0x18;
 const byte SENSOR_A1_2_ADDR = 0x19;
 const byte SENSOR_B1_1_ADDR = 0x1A;
@@ -29,6 +31,14 @@ const int SENSOR_B1_1_NUM = 2;
 const int SENSOR_B1_2_NUM = 3;
 const int SENSOR_B2_1_NUM = 4;
 const int SENSOR_B2_2_NUM = 5;
+
+//array_temp_selected[0] = SENSOR_A1_1_NUM;
+//array_temp_selected[1] = SENSOR_A1_2_NUM;
+//array_temp_selected[2] = SENSOR_B1_1_NUM;
+//array_temp_selected[3] = SENSOR_B1_2_NUM;
+//array_temp_selected[4] = SENSOR_B2_1_NUM;
+//array_temp_selected[5] = SENSOR_B2_2_NUM;
+
 
   // Mode Resolution SampleTime
   //  0    0.5°C       30 ms

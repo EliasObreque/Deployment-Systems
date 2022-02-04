@@ -73,9 +73,9 @@ void PhotoDiodeFSS::calc_sun_position(){
 	float yfss = sin(theta) * cos(phi);
 	float zfss = sin(theta) * sin(phi);
 
-	sun_vector_c[0] = xfss;
-	sun_vector_c[1] = yfss;
-	sun_vector_c[2] = zfss;
+	sun_vector_c[0] = xfss * 1000.0;
+	sun_vector_c[1] = yfss * 1000.0;
+	sun_vector_c[2] = zfss * 1000.0;
 }
 
 void PhotoDiodeFSS::get_sun_vector(){

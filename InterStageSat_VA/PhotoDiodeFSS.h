@@ -28,7 +28,7 @@ private:
 
 public:
 	// Public Members
-	float sun_vector_c[3];
+	float sun_vector_c[3] = {-1.0, -1.0, -1.0};
 	int pd_measure[4];
 	float sun_vector_d[2];
 	float rotationT[2][2] = {{0.0, 0.0}, {0.0, 0.0}};

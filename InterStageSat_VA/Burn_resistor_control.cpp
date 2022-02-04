@@ -8,7 +8,7 @@ int flag_burn_face = 0;
 // burn
 int face_to_burn;
 int current_time;
-int period_time = 1000; // milisecond
+int period_time = 2000; // milisecond
 int attempt_burn = 5;
 int state_sw = 0;
 
